@@ -46,6 +46,7 @@ const char *divv[6] = {"w", "h", "direction", "align-items", "justify-content"};
 const char *color[4] = {"red", "blue", "green"};
 const char *set[5] = {"start", "center", "end", "space-evenly"};
 //目标处理div
+void inheritAttributes(element *parent, element *child);
 int main() {
     while ((c = getchar())!= EOF) {
         if (c == '\n' || c == '\t') {
@@ -149,8 +150,6 @@ int main() {
                             printf("\n");
                         }
                         print += divHeight - qq;
-                    } else {
-                        print = qq;
                     }
                 }
                 top--;
@@ -224,6 +223,14 @@ int main() {
                     if (strcmp(elements[top].tag, "h") == 0||strcmp(elements[top].tag, "p") == 0) {
                         print++;
                         int flag = 0;
+                        // 继承父元素的color, em, i,  u属性
+                        for (int parent = top-1; parent >= 0; parent--) {
+                            if (strcmp(elements[parent].tag, "div") != 0)  break;
+                            if (strcmp(elements[parent].tag, "div")==0 && elements[parent].numAtt != 0) {
+                                inheritAttributes(elements+parent, elements+top);
+                            }
+                        }
+
                         for (int i = 0; i < elements[top].numAtt; i++) {
                             if (strcmp(elements[top].Att[i], "color") == 0) {
                                 flag = 1;
@@ -261,7 +268,7 @@ int main() {
                             }
                         }
                         for (int i = 0; i < indexPut; i++) {
-                           if(strcmp(elements[top].tag, "h") == 0) printf("%c", toupper(output[i]));
+                            if(strcmp(elements[top].tag, "h") == 0) printf("%c", toupper(output[i]));
                             if(strcmp(elements[top].tag, "p") == 0) printf("%c",output[i]);
                         }
 
@@ -292,4 +299,28 @@ int main() {
         if (i!= 9 - print) printf("\n");
     }
     return 0;
+}
+
+void inheritAttributes(element *parent, element *child) {
+    int i;
+    for (i = 0; i < parent->numAtt; i++) {
+        if (strncmp(parent->Att[i], "color", 5) == 0 ||
+            strncmp(parent->Att[i], "em", 2) == 0 ||
+            strncmp(parent->Att[i], "i", 1) == 0 ||
+            strncmp(parent->Att[i], "u", 1) == 0) {
+
+            int j, hasConflict = 0;
+            for (j = 0; j < child->numAtt; j++) {
+                if (strncmp(child->Att[j], parent->Att[i], strlen(parent->Att[i])) == 0) {
+                    hasConflict = 1;
+                    break;
+                }
+            }
+            if (!hasConflict && child->numAtt < 20) {
+                strcpy(child->Att[child->numAtt], parent->Att[i]);
+                strcpy(child->AttValue[child->numAtt], parent->AttValue[i]);
+                child->numAtt++;
+            }
+        }
+    }
 }
